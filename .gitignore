@@ -1,0 +1,7 @@
+*.sw?
+*.userprefs
+[Bb]in/
+[Oo]bj/
+
+# Credentials File
+creds.txt
