@@ -201,11 +201,13 @@ namespace LolBoostNotifier {
 				List<Boost> boosts = GetBoosts ();
 				if (boosts == null) {
 					if (loginAttempts++ > MaxLoginAttempts) {
+						//TODO: Add logging here!
 						catchBoosts = false;
-						//TODO: Report back something meaningful.
+						break;
 					}
 					Thread.Sleep (WaitTime);
 					Login ();
+					continue;
 				}
 				loginAttempts = 0;
 				lock (oldBoosts) {
