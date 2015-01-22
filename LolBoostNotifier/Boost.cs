@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LolBoostNotifier {
 	public enum BoostType {
@@ -26,6 +27,8 @@ namespace LolBoostNotifier {
 
 		public BoostType BoostType { get; set; }
 
+		private List<string> rawData;
+
 		public static Boost Decode(List<string> rawOrder) {
 			var boost = new Boost ();
 			switch (rawOrder [0]) {
@@ -36,11 +39,14 @@ namespace LolBoostNotifier {
 				boost.BoostType = BoostType.DuoQueueBoostExtended;
 				break;
 			}
+			boost.rawData = rawOrder.GetRange (1, rawOrder.Count - 1);
 			return boost;
 		}
 
 		public override string ToString () {
-			return string.Format ("[Boost: {0}]", BoostType.ToDescription());
+			string rawOutput = "";
+			rawData.ForEach (s => rawOutput += "\n" + s);
+			return string.Format ("[Boost: {0}]{1}", BoostType.ToDescription(), rawOutput);
 		}
 	}
 }
