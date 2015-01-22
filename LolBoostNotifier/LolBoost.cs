@@ -81,9 +81,17 @@ namespace LolBoostNotifier {
 		}
 
 		private string GenerateLoginPostBody(HtmlDocument doc) {
-			string viewState = doc.GetElementbyId ("__VIEWSTATE").Attributes ["value"].Value;
-			string viewStateGenerator = doc.GetElementbyId ("__VIEWSTATEGENERATOR").Attributes ["value"].Value;
-			string eventValidation = doc.GetElementbyId ("__EVENTVALIDATION").Attributes ["value"].Value;
+			string viewState;
+			string viewStateGenerator;
+			string eventValidation;
+
+			try {
+				viewState = doc.GetElementbyId ("__VIEWSTATE").Attributes ["value"].Value;
+				viewStateGenerator = doc.GetElementbyId ("__VIEWSTATEGENERATOR").Attributes ["value"].Value;
+				eventValidation = doc.GetElementbyId ("__EVENTVALIDATION").Attributes ["value"].Value;
+			} catch {
+				return string.Empty;
+			}
 
 			NameValueCollection postBody = HttpUtility.ParseQueryString (string.Empty);
 			postBody.Add ("__EVENTTARGET", "ctl00$cphBody$hfLogin");
