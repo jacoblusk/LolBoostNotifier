@@ -184,8 +184,16 @@ namespace LolBoostNotifier {
 				return null;
 			}
 
-			HtmlNode tableOrders = doc.GetElementbyId ("tblOrders");
-			HtmlNode tableBody = tableOrders.Element ("tbody");
+			HtmlNode tableOrders;
+			HtmlNode tableBody;
+
+			try {
+				tableOrders = doc.GetElementbyId ("tblOrders");
+				tableBody = tableOrders.Element ("tbody");
+			} catch {
+				return null;
+			}
+
 			IEnumerable<HtmlNode> tableRows = tableBody.Elements ("tr");
 			List<Boost> boosts = new List<Boost> ();
 			foreach (HtmlNode n in tableRows) {

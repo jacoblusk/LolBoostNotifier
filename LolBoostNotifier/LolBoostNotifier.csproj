@@ -32,10 +32,13 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="HtmlAgilityPack">
-      <HintPath>..\..\..\..\Downloads\HtmlAgilityPack.1.4.6\Net45\HtmlAgilityPack.dll</HintPath>
+      <HintPath>..\..\..\Downloads\HtmlAgilityPack.1.4.6\Net45\HtmlAgilityPack.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="System.Web" />
+    <Reference Include="IrcDotNet">
+      <HintPath>..\..\..\Downloads\ircdotnet-0.4.1-bin\net40\IrcDotNet.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
@@ -45,6 +48,7 @@
     <Compile Include="AttributesHelperExtension.cs" />
     <Compile Include="Credentials.cs" />
     <Compile Include="NewBoostEventArgs.cs" />
+    <Compile Include="IrcConnectInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
