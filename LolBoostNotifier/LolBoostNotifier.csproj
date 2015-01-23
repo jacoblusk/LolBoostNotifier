@@ -37,7 +37,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Web" />
     <Reference Include="IrcDotNet">
-      <HintPath>..\..\..\Downloads\ircdotnet-0.4.1-bin\net40\IrcDotNet.dll</HintPath>
+      <HintPath>..\..\..\Downloads\net40\IrcDotNet.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

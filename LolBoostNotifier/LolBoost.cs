@@ -205,7 +205,7 @@ namespace LolBoostNotifier {
 						.Select (s => s.Trim ())
 						.Where (s => !string.IsNullOrEmpty (s)));
 				}
-				Boost boost = Boost.Decode (rawOrder);
+				Boost boost = Boost.Decode (rawOrder.ToArray());
 				boosts.Add (boost);
 			}
 
