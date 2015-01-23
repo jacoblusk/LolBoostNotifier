@@ -49,6 +49,8 @@
     <Compile Include="Credentials.cs" />
     <Compile Include="NewBoostEventArgs.cs" />
     <Compile Include="IrcConnectInfo.cs" />
+    <Compile Include="Desire.cs" />
+    <Compile Include="Rank.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
