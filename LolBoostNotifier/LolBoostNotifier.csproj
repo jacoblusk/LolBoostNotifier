@@ -31,13 +31,19 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="HtmlAgilityPack">
-      <HintPath>..\..\..\Downloads\HtmlAgilityPack.1.4.6\Net45\HtmlAgilityPack.dll</HintPath>
-    </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="System.Web" />
+    <Reference Include="HtmlAgilityPack">
+      <HintPath>lib\HtmlAgilityPack.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net">
+      <HintPath>lib\log4net.dll</HintPath>
+    </Reference>
     <Reference Include="IrcDotNet">
-      <HintPath>..\..\..\Downloads\net40\IrcDotNet.dll</HintPath>
+      <HintPath>lib\IrcDotNet.dll</HintPath>
+    </Reference>
+    <Reference Include="Db4objects.Db4o">
+      <HintPath>lib\Db4objects.Db4o.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -51,6 +57,8 @@
     <Compile Include="IrcConnectInfo.cs" />
     <Compile Include="Desire.cs" />
     <Compile Include="Rank.cs" />
+    <Compile Include="IStorage.cs" />
+    <Compile Include="Db4oStorage.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

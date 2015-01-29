@@ -9,6 +9,7 @@ using HtmlAgilityPack;
 using System.Linq;
 using System.Threading;
 using System.IO;
+using log4net;
 
 namespace LolBoostNotifier {
 	public class LolBoost {
@@ -16,11 +17,16 @@ namespace LolBoostNotifier {
 		private const string LoginLocation = "Login.aspx";
 		private const string DashboardLocation = "Dashboard.aspx";
 		private const string Domain = ".lolboost.net";
-		private const int WaitTime = 5000;
+		private const int WaitTime = 10000;
 		private const int MaxLoginAttempts = 5;
-		private static readonly string OrdersUrl = string.Join("/", Host, "AccountServicer/AvailableOrders.aspx");
-		private static readonly string LoginUrl = string.Join("/", Host, LoginLocation);
-		private static readonly Regex DdosGuardCookieRegex = new Regex("(_ddn_intercept_2_)=([a-z0-9]+);", RegexOptions.Compiled);
+		private static readonly string OrdersUrl = string.Join("/",
+			Host, "AccountServicer/AvailableOrders.aspx");
+		private static readonly string LoginUrl = string.Join("/",
+			Host, LoginLocation);
+		private static readonly Regex DdosGuardCookieRegex = new Regex
+			("(_ddn_intercept_2_)=([a-z0-9]+);", RegexOptions.Compiled);
+		private static readonly log4net.ILog log = log4net.LogManager.GetLogger
+			(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
 		private string username;
 		private string password;
@@ -31,22 +37,28 @@ namespace LolBoostNotifier {
 		private Cookie ddosGuardCookie;
 
 		private bool catchBoosts;
-		private Thread catchingThread;
+		private readonly Thread catchingThread;
 
 		private List<Boost> oldBoosts = new List<Boost>();
+
+		private IStorage storage;
 
 		public delegate void NewBoostHandler(object sender, NewBoostEventArgs args);
 		public event NewBoostHandler OnNewBoost;
 
-		public LolBoost () { 
+		public LolBoost (IStorage storage) {
+			this.storage = storage;
+			List<Boost> storedBoosts = storage.GetBoosts ();
+			if(storedBoosts != null)
+				oldBoosts.AddRange(storedBoosts);
 			catchingThread = new Thread (new ThreadStart (CatchBoosts));
 		}
 
-		public bool AcceptAllCerts(object sender, X509Certificate cert, X509Chain chain, SslPolicyErrors errors) {
+		private static bool AcceptAllCerts(object sender, X509Certificate cert, X509Chain chain, SslPolicyErrors errors) {
 			return true;
 		}
 
-		private Cookie DdosGuardBypass(string url) {
+		private static Cookie DdosGuardBypass(string url) {
 			var web = new HtmlWeb ();
 			HtmlDocument doc;
 			web.UseCookies = true;
@@ -59,19 +71,16 @@ namespace LolBoostNotifier {
 			try {
 				doc = web.Load (url, "GET");
 			} catch(WebException) {
+				log.Error ("unable to load login");
 				return null;
 			}
 
-			if (doc == null)
-				return null;
-
 			HtmlNode script = doc.DocumentNode.SelectSingleNode ("//script");
 			Match m = DdosGuardCookieRegex.Match (script.InnerText);
-			if (!m.Success)
+			if (!m.Success) {
+				log.Error ("unable to match ddosguard cookie");
 				return null;
-
-			if (m.Groups.Count < 3)
-				return null;
+			}
 
 			string name = m.Groups[1].Value;
 			string value = m.Groups[2].Value;
@@ -80,7 +89,7 @@ namespace LolBoostNotifier {
 			return cookie;
 		}
 
-		private string GenerateLoginPostBody(HtmlDocument doc) {
+		private static string GenerateLoginPostBody(HtmlDocument doc, string username, string password) {
 			string viewState;
 			string viewStateGenerator;
 			string eventValidation;
@@ -90,6 +99,7 @@ namespace LolBoostNotifier {
 				viewStateGenerator = doc.GetElementbyId ("__VIEWSTATEGENERATOR").Attributes ["value"].Value;
 				eventValidation = doc.GetElementbyId ("__EVENTVALIDATION").Attributes ["value"].Value;
 			} catch {
+				log.Error ("unable to index login values");
 				return string.Empty;
 			}
 
@@ -120,25 +130,29 @@ namespace LolBoostNotifier {
 
 		private bool Login() {
 			ddosGuardCookie = DdosGuardBypass (LoginUrl);
-			if (ddosGuardCookie == null)
+			/*if (ddosGuardCookie == null) {
+				log.Error ("ddosguard cookie null");
 				return false;
+			}*/
 
 			var web = new HtmlWeb ();
 			HtmlDocument doc;
 			web.UseCookies = true;
 			web.PreRequest += delegate(HttpWebRequest request) {
 				request.ServerCertificateValidationCallback = AcceptAllCerts;
-				request.CookieContainer.Add(ddosGuardCookie);
+				if(ddosGuardCookie != null)
+					request.CookieContainer.Add(ddosGuardCookie);
 				return true;
 			};
 
 			try {
 				doc = web.Load (LoginUrl, "GET");
-			} catch(WebException) {
+			} catch {
+				log.Error ("unable to load login");
 				return false;
 			}
 
-			string postBody = GenerateLoginPostBody (doc);
+			string postBody = GenerateLoginPostBody (doc, this.username, this.password);
 
 			web.PreRequest += delegate(HttpWebRequest request) {
 				request.ContentType = "application/x-www-form-urlencoded";
@@ -160,7 +174,8 @@ namespace LolBoostNotifier {
 
 			try{
 				web.Load (LoginUrl, "POST");
-			} catch(WebException) {
+			} catch {
+				log.Error ("unable to load login");
 				return false;
 			}
 
@@ -171,16 +186,24 @@ namespace LolBoostNotifier {
 			var web = new HtmlWeb ();
 			web.UseCookies = true;
 			HtmlDocument doc;
+
+			if (sessionCookie == null) {
+				log.Error ("session error");
+				return null;
+			}
+
 			web.PreRequest += delegate(HttpWebRequest request) {
 				request.ServerCertificateValidationCallback += AcceptAllCerts;
 				request.CookieContainer.Add (sessionCookie);
-				request.CookieContainer.Add (ddosGuardCookie);
+				if(ddosGuardCookie != null) 
+					request.CookieContainer.Add (ddosGuardCookie);
 				return true;
 			};
 
 			try {
 				doc = web.Load (OrdersUrl, "GET");
-			} catch(WebException) {
+			} catch {
+				log.Error ("unable to load orders");
 				return null;
 			}
 
@@ -191,6 +214,7 @@ namespace LolBoostNotifier {
 				tableOrders = doc.GetElementbyId ("tblOrders");
 				tableBody = tableOrders.Element ("tbody");
 			} catch {
+				log.Error ("unable to index table");
 				return null;
 			}
 
@@ -216,21 +240,28 @@ namespace LolBoostNotifier {
 			while (catchBoosts) {
 				List<Boost> boosts = GetBoosts ();
 				if (boosts == null) {
+					log.Error ("login session timed out");
 					if (loginAttempts++ > MaxLoginAttempts) {
-						//TODO: Add logging here!
+						log.Fatal ("max login attempts reached");
 						catchBoosts = false;
 						break;
 					}
 					Thread.Sleep (WaitTime);
+					ddosGuardCookie = null;
+					sessionCookie = null;
 					Login ();
 					continue;
 				}
 				loginAttempts = 0;
 				lock (oldBoosts) {
 					IEnumerable<Boost> newBoosts = boosts.Where (b => !oldBoosts.Contains (b));
+					IEnumerable<Boost> deleteBoosts = oldBoosts.Where (b => !boosts.Contains (b));
+					foreach (Boost b in deleteBoosts)
+						storage.Delete (b);
 					foreach (Boost b in newBoosts) {
 						if (OnNewBoost != null) {
 							OnNewBoost (this, new NewBoostEventArgs (b));
+							storage.Put (b);
 							oldBoosts.Add (b);
 						}
 					}
@@ -241,16 +272,19 @@ namespace LolBoostNotifier {
 		}
 
 		public void Start() {
+			log.Info ("starting thread");
 			catchBoosts = true;
 			catchingThread.Start ();
 		}
 
 		public void Stop() {
+			log.Info ("stopping thread");
 			catchBoosts = false;
 		}
 
 		public void Stop(bool force) {
 			if (force) {
+				log.Info ("force stopping thread");
 				Stop ();
 				catchingThread.Abort ();
 			} else

@@ -12,6 +12,7 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyCopyright ("Jacob")]
 [assembly: AssemblyTrademark ("")]
 [assembly: AssemblyCulture ("")]
+[assembly: log4net.Config.XmlConfigurator(ConfigFile = "app.config", Watch = true)]
 
 // The assembly version has the format "{Major}.{Minor}.{Build}.{Revision}".
 // The form "{Major}.{Minor}.*" will automatically update the build and revision,

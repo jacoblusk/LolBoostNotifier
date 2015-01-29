@@ -11,6 +11,8 @@ namespace LolBoostNotifier {
 		PlacementGames,
 		[Description("Guaranteed Division")]
 		GuaranteedDivison,
+		[Description("Unranked Division")]
+		UnrankedDivisionBoost,
 		[Description("DuoQueue")]
 		DuoQueue,
 		[Description("DuoQueue Extended")]
@@ -66,8 +68,17 @@ namespace LolBoostNotifier {
 			case "DUOQUEUE EXTENDED":
 				boost.BoostType = BoostType.DuoQueueBoostExtended;
 				break;
+			case "DUO QUEUE BOOSTING":
+				boost.BoostType = BoostType.DuoQueue;
+				break;
 			case "GUARANTEED LEAGUE / DIVISION BOOSTING":
 				boost.BoostType = BoostType.GuaranteedDivison;
+				break;
+			case "UNRANKED LEAGUE / DIVISION BOOSTING":
+				boost.BoostType = BoostType.UnrankedDivisionBoost;
+				break;
+			case "WIN BOOSTING":
+				boost.BoostType = BoostType.Win;
 				break;
 			default:
 				boost.BoostType = BoostType.Unknown;
@@ -97,6 +108,7 @@ namespace LolBoostNotifier {
 				boost.Rank.LPG = int.Parse (lpgMatch.Groups [1].Value);
 				
 			switch (boost.BoostType) {
+			case BoostType.UnrankedDivisionBoost:
 			case BoostType.GuaranteedDivison:
 				Rank desiredRank;
 				var rankDesire = new RankDesire ();
@@ -142,11 +154,9 @@ namespace LolBoostNotifier {
 			if (obj == null)
 				return false;
 			Boost boost = (Boost)obj;
-			if (boost.BoostType != this.BoostType)
-				return false;
-			if (boost.PurchaseDate != this.PurchaseDate)
-				return false;
-			if (boost.UnparsedData.Length != this.UnparsedData.Length)
+			if (boost.BoostType != this.BoostType ||
+				boost.PurchaseDate != this.PurchaseDate ||
+				boost.UnparsedData.Length != this.UnparsedData.Length)
 				return false;
 			for (int i = 0; i < boost.UnparsedData.Length; i++) {
 				if (boost.UnparsedData [i] != this.UnparsedData [i])
