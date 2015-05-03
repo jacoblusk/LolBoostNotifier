@@ -17,8 +17,8 @@ namespace LolBoostNotifier {
 		private const string LoginLocation = "Login.aspx";
 		private const string DashboardLocation = "Dashboard.aspx";
 		private const string Domain = ".lolboost.net";
-		private const int WaitTime = 10000;
-		private const int MaxLoginAttempts = 5;
+		private const int WaitTime = 45000;
+		private const int MaxLoginAttempts = 10;
 		private static readonly string OrdersUrl = string.Join("/",
 			Host, "AccountServicer/AvailableOrders.aspx");
 		private static readonly string LoginUrl = string.Join("/",
@@ -229,8 +229,12 @@ namespace LolBoostNotifier {
 						.Select (s => s.Trim ())
 						.Where (s => !string.IsNullOrEmpty (s)));
 				}
-				Boost boost = Boost.Decode (rawOrder.ToArray());
-				boosts.Add (boost);
+				try {
+					Boost boost = Boost.Decode (rawOrder.ToArray());
+					boosts.Add (boost);
+				} catch(BoostParseException ex) {
+					log.Error (ex.Message);
+				}
 			}
 
 			return boosts;

@@ -59,6 +59,7 @@
     <Compile Include="Rank.cs" />
     <Compile Include="IStorage.cs" />
     <Compile Include="Db4oStorage.cs" />
+    <Compile Include="BoostParseException.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

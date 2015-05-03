@@ -58,10 +58,11 @@ namespace LolBoostNotifier {
 		public string[] UnparsedData { get; set; }
 
 		public static Boost Decode(string[] rawOrder) {
-			int counter = 0;
+			int counter = 1;
 			var boost = new Boost ();
 
 			switch (rawOrder[counter++].ToUpper()) {
+			case "PLACEMENT GAMES":
 			case "PLACEMENT GAMES - 8/10 WINS MINIMUM!":
 				boost.BoostType = BoostType.PlacementGames;
 				break;
@@ -71,6 +72,7 @@ namespace LolBoostNotifier {
 			case "DUO QUEUE BOOSTING":
 				boost.BoostType = BoostType.DuoQueue;
 				break;
+			case "DIVISION BOOSTING":
 			case "GUARANTEED LEAGUE / DIVISION BOOSTING":
 				boost.BoostType = BoostType.GuaranteedDivison;
 				break;
@@ -81,14 +83,13 @@ namespace LolBoostNotifier {
 				boost.BoostType = BoostType.Win;
 				break;
 			default:
-				boost.BoostType = BoostType.Unknown;
-				break;
+				throw new BoostParseException ("Unable to determine boost type.");
 			}
 				
 			DateTime time;
-			if (!DateTime.TryParseExact (rawOrder[counter++], "dd/MM/yyyy HH:mm:ss", 
-				CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out time))
-				Console.Write ("unable to parse boost time!");
+			if (!DateTime.TryParseExact (rawOrder [counter++], "dd/MM/yyyy HH:mm:ss", 
+				    CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal, out time))
+				throw new BoostParseException ("Failed to parse boost purchase date.");
 			boost.PurchaseDate = time;
 
 			boost.Name = rawOrder [counter++];
@@ -96,7 +97,7 @@ namespace LolBoostNotifier {
 
 			Rank rank;
 			if (!Rank.TryParse (rawOrder [counter++], out rank))
-				Console.WriteLine ("unable to parse rank");
+				throw new BoostParseException ("Failed to parse boost rank.");
 			boost.Rank = rank;
 
 			Match lpMatch = LPRegex.Match (rawOrder [counter++]);
@@ -115,28 +116,40 @@ namespace LolBoostNotifier {
 				rankDesire.DesireType = DesireType.Rank;
 				if (Rank.TryParse (rawOrder [counter++], out desiredRank))
 					rankDesire.Rank = desiredRank;
-				else {
-					desiredRank.League = League.Unknown;
-					desiredRank.Division = Division.Unknown;
-				}
+				else
+					throw new BoostParseException ("Unable to parse GuaranteedDivision boost rank.");
 				boost.Desire = rankDesire;
 				break;
 			default:
+				int desiredGames;
 				var gameDesire = new GamesDesire ();
 				gameDesire.DesireType = DesireType.Games;
-				gameDesire.Games = int.Parse (rawOrder [counter++]);
+				if (int.TryParse (rawOrder [counter++], out desiredGames))
+					gameDesire.Games = desiredGames;
+				else
+					throw new BoostParseException ("Unable to parse boost desired games.");
 				boost.Desire = gameDesire;
 				counter++;
 				break;
 			}
 
-			boost.Points = int.Parse (rawOrder [counter++]);
+			int points;
+			if (int.TryParse (rawOrder [counter++], out points))
+				boost.Points = points;
+			else
+				throw new BoostParseException ("Unable to parse boost points.");
 
 			Match percentMatch = PercentRegex.Match (rawOrder [counter++]);
 			if (percentMatch.Success)
-				boost.Percentage = int.Parse (percentMatch.Groups[1].Value);
+				boost.Percentage = int.Parse (percentMatch.Groups [1].Value);
+			else
+				throw new BoostParseException ("Unable to parse boost percentage.");
 
-			boost.Amount = float.Parse (rawOrder [counter++]);
+			float amount;
+			if (float.TryParse (rawOrder [counter++], out amount))
+				boost.Amount = amount;
+			else
+				throw new BoostParseException ("Unable to parse boost amount.");
 
 			boost.UnparsedData = new string[rawOrder.Length - counter + 1];
 			if(rawOrder.Length != counter) {
