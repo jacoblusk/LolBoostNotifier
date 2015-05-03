@@ -1,10 +1,8 @@
 ﻿using System.Net;
-using System.Net.Security;
 using System.Text.RegularExpressions;
 using System.Web;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Security.Cryptography.X509Certificates;
 using HtmlAgilityPack;
 using System.Linq;
 using System.Threading;
@@ -54,17 +52,12 @@ namespace LolBoostNotifier {
 			catchingThread = new Thread (new ThreadStart (CatchBoosts));
 		}
 
-		private static bool AcceptAllCerts(object sender, X509Certificate cert, X509Chain chain, SslPolicyErrors errors) {
-			return true;
-		}
-
 		private static Cookie DdosGuardBypass(string url) {
 			var web = new HtmlWeb ();
 			HtmlDocument doc;
 			web.UseCookies = true;
 
 			web.PreRequest += delegate(HttpWebRequest request) {
-				request.ServerCertificateValidationCallback = AcceptAllCerts;
 				return true;
 			};
 
@@ -139,7 +132,7 @@ namespace LolBoostNotifier {
 			HtmlDocument doc;
 			web.UseCookies = true;
 			web.PreRequest += delegate(HttpWebRequest request) {
-				request.ServerCertificateValidationCallback = AcceptAllCerts;
+				//request.ServerCertificateValidationCallback = AcceptAllCerts;
 				if(ddosGuardCookie != null)
 					request.CookieContainer.Add(ddosGuardCookie);
 				return true;
@@ -193,7 +186,7 @@ namespace LolBoostNotifier {
 			}
 
 			web.PreRequest += delegate(HttpWebRequest request) {
-				request.ServerCertificateValidationCallback += AcceptAllCerts;
+				//request.ServerCertificateValidationCallback += AcceptAllCerts;
 				request.CookieContainer.Add (sessionCookie);
 				if(ddosGuardCookie != null) 
 					request.CookieContainer.Add (ddosGuardCookie);
